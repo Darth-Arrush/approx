@@ -1,2 +1,2 @@
 # approx
-Polynomial approximations to functions
+Polynomial approximations to elementary functions
