@@ -3,8 +3,8 @@ This repository contains libraries in `C (gcc 12.2.0)`, `C++ (gcc 12.2.0)`, `C#`
 To approximate roots to non-polynomials, input the **Taylor Series** around the root or the **Maclaurin Series** (**Taylor Series** around `0`).
 
 ## Versions
-`C`: 0  
-`C++`: 0  
+`C (gcc 12.2.0)`: 0  
+`C++ (gcc 12.2.0)`: 0  
 `C#`: 0  
 `Go 1.19`: 0.2 UNTESTED  
 `Java`: 0  
