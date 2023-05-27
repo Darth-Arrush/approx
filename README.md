@@ -6,7 +6,7 @@ To approximate roots to non-polynomials, input the **Taylor Series** around the 
 `C`: 0  
 `C++`: 0  
 `C#`: 0  
-`Go 1.19`: 0.1  
+`Go 1.19`: 0.2 UNTESTED  
 `Java`: 0  
 `Julia`: 0  
 `Python 3.10`: 0  
