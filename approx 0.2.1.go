@@ -1,7 +1,7 @@
 /* package approx contains methods to approximate roots of real-valued polynomials */
 /* Use Taylor/Maclaurin series to approximate roots of non-polynomials */
 /* approx uses float64, so slight inaccuracy is to be expected */
-/* v 0.2 */
+/* v 0.2.1 */
 
 package approx
 
@@ -39,26 +39,25 @@ func Bisection(poly Polynomial, x0 float64, x1 float64, accuracy float64) (float
 		return (x0 + x1) / 2, nil
 	}
 	if execute(poly, x0) < 0 && execute(poly, x1) > 0 {
-		for math.Abs(execute(poly, (x0+x1)/2)) >= math.Abs(accuracy) {
-			if execute(poly, (x0+x1)/2) > 0 {
-				x1 = (x0 + x1) / 2
-			} else if execute(poly, (x0+x1)/2) < 0 {
-				x0 = (x0 + x1) / 2
-			} else {
-				return 0.0, errors.New("error")
-			}
+		if execute(poly, (x0+x1)/2) > 0 {
+			x1 = (x0 + x1) / 2
+		} else if execute(poly, (x0+x1)/2) < 0 {
+			x0 = (x0 + x1) / 2
+		} else {
+			return 0.0, errors.New("error")
 		}
+		Bisection(poly, x0, x1, accuracy)
 		return (x0 + x1) / 2, nil
 	} else if execute(poly, x0) > 0 && execute(poly, x1) < 0 {
-		for math.Abs(execute(poly, (x0+x1)/2)) >= math.Abs(accuracy) {
-			if execute(poly, (x0+x1)/2) > 0 {
-				x0 = (x0 + x1) / 2
-			} else if execute(poly, (x0+x1)/2) < 0 {
-				x1 = (x0 + x1) / 2
-			} else {
-				return 0.0, errors.New("error")
-			}
+		if execute(poly, (x0+x1)/2) > 0 {
+			x0 = (x0 + x1) / 2
+		} else if execute(poly, (x0+x1)/2) < 0 {
+			x1 = (x0 + x1) / 2
+		} else {
+			return 0.0, errors.New("error")
 		}
+		Bisection(poly, x0, x1, accuracy)
+		return (x0 + x1) / 2, nil
 	}
 	return 0.0, errors.New("both x0 and x1 have same sign")
 }
