@@ -1,7 +1,7 @@
 /* package approx contains methods to approximate roots of real-valued polynomials */
 /* Use Taylor/Maclaurin series to approximate roots of non-polynomials */
 /* approx uses float64, so slight inaccuracy is to be expected */
-/* v 0.2.1 */
+/* v 1.0.0 */
 
 package approx
 
@@ -20,10 +20,6 @@ func execute(poly Polynomial, x float64) float64 { /* Returns float64 output of 
 		result += poly[i] * (math.Pow(x, float64(i)))
 	}
 	return result
-}
-
-func fPrime(poly Polynomial, x0 float64, x1 float64) float64 { /* For Broyden and BroydenIter */
-	return (execute(poly, x1) - execute(poly, x0)) / (x1 - x0)
 }
 
 func g(poly Polynomial, x float64) float64 { /* For Steffensen and SteffensenIter */
@@ -92,25 +88,6 @@ func BisectionIter(poly Polynomial, x0 float64, x1 float64, iterations int) (flo
 	return 0.0, errors.New("both x0 and x1 have same sign")
 }
 
-/* Interpolation */
-func Secant(poly Polynomial, x0 float64, x1 float64, accuracy float64) float64 /* Finds root to y = 0 ± accuracy */ {
-	approximations := []float64{x0, x1}
-	for math.Abs(approximations[len(approximations)-1]) < math.Abs(accuracy) {
-		newApproximation := ((approximations[len(approximations)-2] * execute(poly, approximations[len(approximations)-1])) - (approximations[len(approximations)-1] * execute(poly, approximations[len(approximations)-2]))) / (execute(poly, approximations[len(approximations)-1]) - execute(poly, approximations[len(approximations)-2]))
-		approximations = append(approximations, newApproximation)
-	}
-	return approximations[len(approximations)-1]
-}
-
-func SecantIter(poly Polynomial, x0 float64, x1 float64, iterations int) float64 /* Finds root in iterations iterations */ {
-	approximations := []float64{x0, x1}
-	for i := 2; i < iterations+2; i += 1 {
-		newApproximation := ((approximations[i-2] * execute(poly, approximations[i-1])) - (approximations[i-1] * execute(poly, approximations[i-2]))) / (execute(poly, approximations[i-1]) - execute(poly, approximations[i-2]))
-		approximations = append(approximations, newApproximation)
-	}
-	return approximations[len(approximations)-1]
-}
-
 /* Iterative */
 func Newton(poly Polynomial, x0 float64, accuracy float64) (float64, error) /* Finds root to y = 0 ± accuracy */ {
 	if len(poly) <= 1 {
@@ -121,7 +98,7 @@ func Newton(poly Polynomial, x0 float64, accuracy float64) (float64, error) /* F
 		derivative = append(derivative, float64(i)*poly[i])
 	}
 	approximations := []float64{x0}
-	for math.Abs(execute(poly, approximations[len(approximations)-1])) < math.Abs(accuracy) { /* Uses formula x_(n+1) = x_n - f(x_n)/f'(x_n) */
+	for math.Abs(execute(poly, approximations[len(approximations)-1])) > math.Abs(accuracy) { /* Uses formula x_(n+1) = x_n - f(x_n)/f'(x_n) */
 		newApproximation := approximations[len(approximations)-1] - execute(poly, approximations[len(approximations)-1])/execute(derivative, approximations[len(approximations)-1])
 		approximations = append(approximations, newApproximation)
 	}
@@ -144,24 +121,6 @@ func NewtonIter(poly Polynomial, x0 float64, iterations int) (float64, error) /*
 	return approximations[len(approximations)-1], nil
 }
 
-func Broyden(poly Polynomial, x0 float64, x1 float64, h float64, accuracy float64) float64 /* Finds root to y = 0 ± accuracy */ {
-	approximations := []float64{x0, x1}
-	for math.Abs(execute(poly, approximations[len(approximations)-1])) < math.Abs(accuracy) { /* Uses formula x_(n+1) = x_n - f(x_n)/f'(x_n) */
-		newApproximation := approximations[len(approximations)-1] - execute(poly, approximations[len(approximations)-1])/fPrime(poly, approximations[len(approximations)-2], approximations[len(approximations)-1])
-		approximations = append(approximations, newApproximation)
-	}
-	return approximations[len(approximations)-1]
-}
-
-func BroydenIter(poly Polynomial, x0 float64, x1 float64, h float64, iterations int) float64 /* Finds root in iterations iterations */ {
-	approximations := []float64{x0, x1}
-	for i := 0; i <= iterations; i += 1 { /* Uses formula x_(n+1) = x_n - f(x_n)/f'(x_n) */
-		newApproximation := approximations[len(approximations)-1] - execute(poly, approximations[len(approximations)-1])/fPrime(poly, approximations[len(approximations)-2], approximations[len(approximations)-1])
-		approximations = append(approximations, newApproximation)
-	}
-	return approximations[len(approximations)-1]
-}
-
 func Halley(poly Polynomial, x0 float64, accuracy float64) (float64, error) /* Finds root to y = 0 ± accuracy */ {
 	if len(poly) <= 2 {
 		return 0.0, errors.New("enter a twice-differentiable polynomial")
@@ -171,12 +130,12 @@ func Halley(poly Polynomial, x0 float64, accuracy float64) (float64, error) /* F
 		derivative = append(derivative, float64(i)*poly[i])
 	}
 	var doubleDerivative Polynomial = []float64{}
-	for i := 1; i < len(derivative); i += 1 {
-		doubleDerivative = append(doubleDerivative, float64(i)*derivative[i])
+	for j := 1; j < len(derivative); j += 1 {
+		doubleDerivative = append(doubleDerivative, float64(j)*derivative[j])
 	}
 	approximations := []float64{x0}
-	for math.Abs(execute(poly, approximations[len(approximations)-1])) <= math.Abs(accuracy) {
-		newApproximation := approximations[len(approximations)] - 2*execute(poly, approximations[len(approximations)-1])*execute(derivative, approximations[len(approximations)-1])/((2*execute(derivative, approximations[len(approximations)-1])*execute(derivative, approximations[len(approximations)-1]))-execute(poly, approximations[len(approximations)-1])*execute(doubleDerivative, approximations[len(approximations)-1]))
+	for math.Abs(execute(poly, approximations[len(approximations)-1])) > math.Abs(accuracy) {
+		newApproximation := approximations[len(approximations)-1] - 2*execute(poly, approximations[len(approximations)-1])*execute(derivative, approximations[len(approximations)-1])/((2*execute(derivative, approximations[len(approximations)-1])*execute(derivative, approximations[len(approximations)-1]))-execute(poly, approximations[len(approximations)-1])*execute(doubleDerivative, approximations[len(approximations)-1]))
 		approximations = append(approximations, newApproximation)
 	}
 	return approximations[len(approximations)-1], nil
@@ -191,12 +150,12 @@ func HalleyIter(poly Polynomial, x0 float64, iterations int) (float64, error) /*
 		derivative = append(derivative, float64(i)*poly[i])
 	}
 	var doubleDerivative Polynomial = []float64{}
-	for i := 1; i < len(derivative); i += 1 {
-		doubleDerivative = append(doubleDerivative, float64(i)*derivative[i])
+	for j := 1; j < len(derivative); j += 1 {
+		doubleDerivative = append(doubleDerivative, float64(j)*derivative[j])
 	}
 	approximations := []float64{x0}
-	for i := 0; i < iterations; i += 1 {
-		newApproximation := approximations[len(approximations)] - 2*execute(poly, approximations[len(approximations)-1])*execute(derivative, approximations[len(approximations)-1])/((2*execute(derivative, approximations[len(approximations)-1])*execute(derivative, approximations[len(approximations)-1]))-execute(poly, approximations[len(approximations)-1])*execute(doubleDerivative, approximations[len(approximations)-1]))
+	for k := 0; k < iterations; k += 1 {
+		newApproximation := approximations[len(approximations)-1] - 2*execute(poly, approximations[len(approximations)-1])*execute(derivative, approximations[len(approximations)-1])/((2*execute(derivative, approximations[len(approximations)-1])*execute(derivative, approximations[len(approximations)-1]))-execute(poly, approximations[len(approximations)-1])*execute(doubleDerivative, approximations[len(approximations)-1]))
 		approximations = append(approximations, newApproximation)
 	}
 	return approximations[len(approximations)-1], nil
@@ -204,7 +163,7 @@ func HalleyIter(poly Polynomial, x0 float64, iterations int) (float64, error) /*
 
 func Steffensen(poly Polynomial, x0 float64, accuracy float64) float64 /* Finds root to y = 0 ± accuracy */ {
 	approximations := []float64{x0}
-	for math.Abs(execute(poly, approximations[len(approximations)-1])) < math.Abs(accuracy) { /* Uses formula x_(n+1) = x_n - f(x_n)/g(x_n) */
+	for math.Abs(execute(poly, approximations[len(approximations)-1])) > math.Abs(accuracy) { /* Uses formula x_(n+1) = x_n - f(x_n)/g(x_n) */
 		newApproximation := approximations[len(approximations)-1] - execute(poly, approximations[len(approximations)-1])/g(poly, approximations[len(approximations)-1])
 		approximations = append(approximations, newApproximation)
 	}
@@ -212,8 +171,9 @@ func Steffensen(poly Polynomial, x0 float64, accuracy float64) float64 /* Finds 
 }
 
 func SteffensenIter(poly Polynomial, x0 float64, iterations int) float64 /* Finds root in iterations iterations */ {
+	/*VERY slow convergence if x0 not close to root*/
 	approximations := []float64{x0}
-	for i := 0; i <= iterations; i += 1 { /* Uses formula x_(n+1) = x_n - f(x_n)/g(x_n) */
+	for i := 0; i < iterations; i += 1 {
 		newApproximation := approximations[len(approximations)-1] - execute(poly, approximations[len(approximations)-1])/g(poly, approximations[len(approximations)-1])
 		approximations = append(approximations, newApproximation)
 	}
